@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root { --ink:#171717; --muted:#71717a; --line:#e9e7e2; --gold:#f5c400; --canvas:#f7f7f5; }
+* { box-sizing: border-box; }
+html { background: var(--canvas); }
+body { margin:0; color:var(--ink); background:var(--canvas); font-family:Arial, Helvetica, sans-serif; }
+button, input, select { font:inherit; }
+button { cursor:pointer; }
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-thumb { background:#d4d4d4; border-radius:8px; }
+.card { background:white; border:1px solid var(--line); border-radius:18px; }
+.subtle { color:var(--muted); }
+.number { font-variant-numeric:tabular-nums; letter-spacing:-.03em; }
+@keyframes enter { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+.enter { animation:enter .35s ease both; }
+@media (max-width:1023px){ .desktop-sidebar{display:none!important} }

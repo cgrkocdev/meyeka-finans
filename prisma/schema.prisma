@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  FINANCE
+  PERSONNEL
+  VIEWER
+}
+
+enum Status {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum Frequency {
+  MONTHLY
+  YEARLY
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model Company {
+  id            String         @id @default(cuid())
+  name          String
+  currency      String         @default("TRY")
+  users         User[]
+  customers     Customer[]
+  transactions  Transaction[]
+  employees     Employee[]
+  subscriptions Subscription[]
+  categories    Category[]
+  settings      Setting?
+  createdAt     DateTime       @default(now())
+}
+
+model User {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         Role           @default(VIEWER)
+  companyId    String
+  company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  name         String
+  email        String?
+  companyId    String
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+}
+
+model Category {
+  id           String          @id @default(cuid())
+  name         String
+  type         TransactionType
+  color        String?
+  companyId    String
+  company      Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  @@unique([companyId, name, type])
+}
+
+model Transaction {
+  id              String          @id @default(cuid())
+  title           String
+  type            TransactionType
+  amount          Decimal         @db.Decimal(14, 2)
+  currency        String          @default("TRY")
+  transactionDate DateTime
+  dueDate         DateTime?
+  status          Status          @default(PENDING)
+  description     String?
+  paymentMethod   String?
+  invoiceNumber   String?
+  recurring       Boolean         @default(false)
+  notes           String?
+  companyId       String
+  categoryId      String?
+  customerId      String?
+  employeeId      String?
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category        Category?       @relation(fields: [categoryId], references: [id])
+  customer        Customer?       @relation(fields: [customerId], references: [id])
+  employee        Employee?       @relation(fields: [employeeId], references: [id])
+  attachments     Attachment[]
+  payments        Payment[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  @@index([companyId, type, transactionDate])
+  @@index([dueDate, status])
+}
+
+model Employee {
+  id              String          @id @default(cuid())
+  name            String
+  position        String
+  salary          Decimal         @db.Decimal(14, 2)
+  socialSecurity  Decimal         @default(0) @db.Decimal(14, 2)
+  mealAllowance   Decimal         @default(0) @db.Decimal(14, 2)
+  travelAllowance Decimal         @default(0) @db.Decimal(14, 2)
+  bonus           Decimal         @default(0) @db.Decimal(14, 2)
+  startDate       DateTime
+  paymentDay      Int
+  active          Boolean         @default(true)
+  notes           String?
+  companyId       String
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+  salaryPayments  SalaryPayment[]
+}
+
+model SalaryPayment {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  period     DateTime
+  amount     Decimal  @db.Decimal(14, 2)
+  status     Status   @default(PENDING)
+  paidAt     DateTime?
+  @@unique([employeeId, period])
+}
+
+model Subscription {
+  id               String    @id @default(cuid())
+  name             String
+  vendor           String
+  frequency        Frequency
+  amount           Decimal   @db.Decimal(14, 2)
+  renewalDate      DateTime
+  automaticPayment Boolean   @default(false)
+  paymentMethod    String?
+  notes            String?
+  active           Boolean   @default(true)
+  companyId        String
+  company          Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@index([renewalDate, active])
+}
+
+model Payment {
+  id            String       @id @default(cuid())
+  amount        Decimal      @db.Decimal(14, 2)
+  dueDate       DateTime
+  paidAt        DateTime?
+  status        Status       @default(PENDING)
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  companyId     String
+  @@index([companyId, dueDate, status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model CalendarEvent {
+  id        String           @id @default(cuid())
+  title     String
+  startAt   DateTime
+  endAt     DateTime?
+  type      TransactionType?
+  status    Status?
+  companyId String
+  createdAt DateTime         @default(now())
+  @@index([companyId, startAt])
+}
+
+model Attachment {
+  id            String      @id @default(cuid())
+  fileName      String
+  url           String
+  mimeType      String
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+}
+
+model Setting {
+  id                   String  @id @default(cuid())
+  companyId            String  @unique
+  company              Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  taxRate              Decimal @default(20) @db.Decimal(5, 2)
+  defaultPaymentDay    Int     @default(1)
+  theme                String  @default("light")
+  notificationsEnabled Boolean @default(true)
+}

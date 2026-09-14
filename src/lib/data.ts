@@ -1,0 +1,12 @@
+export type MonthlyPoint={ay:string;gelir:number;gider:number};
+export type CategoryPoint={name:string;value:number;color:string};
+export type PaymentItem={title:string;category:string;date:string;amount:number;icon:string;tone:string};
+export type TransactionItem={title:string;detail:string;date:string;amount:number;type:"in"|"out"};
+export type EmployeeItem={name:string;role:string;salary:number;sgk:number;food:number;road:number;status:string};
+export type SubscriptionItem={name:string;company:string;period:string;amount:number;renewal:string;auto:boolean};
+export const monthly:MonthlyPoint[]=[];
+export const categories:CategoryPoint[]=[];
+export const payments:PaymentItem[]=[];
+export const transactions:TransactionItem[]=[];
+export const employees:EmployeeItem[]=[];
+export const subscriptions:SubscriptionItem[]=[];

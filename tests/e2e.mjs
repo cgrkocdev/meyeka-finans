@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import assert from "node:assert/strict";
 
-const baseURL="http://localhost:3000";
+const baseURL=process.env.BASE_URL??"http://localhost:3000";
 const browser=await chromium.launch({headless:true,executablePath:"C:/Program Files/Google/Chrome/Application/chrome.exe"});
 const context=await browser.newContext({acceptDownloads:true});
 const page=await context.newPage();

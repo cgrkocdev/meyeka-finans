@@ -16,7 +16,10 @@ export function parseTurkishMoney(value:FormDataEntryValue|null){
 }
 
 export function formatTurkishMoneyInput(value:string|number){
- const text=String(value).replace(".",",").replace(/[^\d,]/g,"");
+ // Metin alanındaki noktalar bu bileşenin eklediği binlik ayırıcılardır.
+ // Sayısal varsayılan değerlerdeki nokta ise JavaScript ondalık ayırıcıdır.
+ const source=typeof value==="number"?String(value).replace(".",","):value;
+ const text=source.replace(/\./g,"").replace(/[^\d,]/g,"");
  const hasDecimal=text.includes(",");
  const [integerPart="",...decimalParts]=text.split(",");
  const integer=(integerPart.replace(/^0+(?=\d)/,"")||"0").replace(/\B(?=(\d{3})+(?!\d))/g,".");
